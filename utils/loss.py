@@ -205,10 +205,16 @@ class ComputeLoss:
             gwh = t[:, 4:6]  # grid wh
             gij = (gxy - offsets).long()
             gi, gj = gij.T  # grid xy indices
+            gj = gj.long() # immediately cast to long integer
+            gi = gi.long() # immediately cast to long integer
+            
+            # Clamp after conversion to long
+            gj = gj.clamp(0, int(gain[3]) - 1)  # use integer bounds
+            gi = gi.clamp(0, int(gain[2]) - 1)  # use integer bounds
 
             # Append
             a = t[:, 6].long()  # anchor indices
-            indices.append((b, a, gj.clamp_(0, gain[3] - 1), gi.clamp_(0, gain[2] - 1)))  # image, anchor, grid indices
+            indices.append((b, a, gj, gi))  # image, anchor, grid indices
             tbox.append(torch.cat((gxy - gij, gwh), 1))  # box
             anch.append(anchors[a])  # anchors
             tcls.append(c)  # class
